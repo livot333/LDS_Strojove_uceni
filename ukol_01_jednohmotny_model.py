@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split 
 from sklearn.preprocessing import StandardScaler 
 from tensorflow import keras
+import joblib 
 
 # Definování rozsahů parametrů
 hmotnost_rozsah = [0.1, 10]
@@ -24,6 +25,7 @@ frekvence = np.random.uniform(frekvence_rozsah[0], frekvence_rozsah[1], pocet_vz
 # Pro zjednodušení použijeme náhodné hodnoty
 omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
 amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
+# amplituda = np.random.uniform(0, 10, pocet_vzorku)
 
 # Vytvoření Data
 data = pd.DataFrame({
@@ -53,7 +55,7 @@ model = keras.Sequential([
     keras.layers.Dense(1)])
 
 # Kompilace modelu
-model.compile(optimizer="adam", loss="mse")
+model.compile(optimizer="adam", loss=keras.losses.MeanSquaredError())
 # Trénování modelu
 model.fit(X_train, y_train, epochs=100, validation_split=0.2)
 
@@ -62,14 +64,10 @@ loss = model.evaluate(X_test, y_test)
 print(f"Testovací MSE: {loss}")
  
 
-###
-# Example: Your custom input values
-my_values = np.array([[2.5, 1.2, 500, 5.0]])  # Example: mass=2.5, damping=1.2, stiffness=500, frequency=5.0
+# Save the model and scaler
+model.save("jednohmotny_model_mark01.h5")
+joblib.dump(scaler, "scaler_4_mark01.pkl")
 
-# Normalize the input using the same scaler
-my_values_scaled = scaler.transform(my_values)
+print("Model and scaler saved successfully.")
 
-# Predict amplitude
-predicted_amplitude = model.predict(my_values_scaled)
 
-print(f"Predicted Amplitude: {predicted_amplitude[0][0]:.4f}")
