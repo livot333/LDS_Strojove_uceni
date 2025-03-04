@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split 
 from sklearn.preprocessing import StandardScaler 
+from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 import joblib 
 
@@ -23,9 +24,9 @@ frekvence = np.random.uniform(frekvence_rozsah[0], frekvence_rozsah[1], pocet_vz
 
 # Výpočet amplitudy (zde je potřeba vložit váš výpočet)
 # Pro zjednodušení použijeme náhodné hodnoty
-omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
-amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
-# amplituda = np.random.uniform(0, 10, pocet_vzorku)
+# omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
+# amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
+amplituda = np.random.uniform(0, 10, pocet_vzorku)
 
 # Vytvoření Data
 data = pd.DataFrame({
@@ -50,8 +51,8 @@ X_test = scaler.transform(X_test)
 
 # Návrh modelu
 model = keras.Sequential([
-    keras.layers.Dense(128, activation="relu", input_shape=(X_train.shape[1],)),
-    keras.layers.Dense(128, activation="relu"),
+    keras.layers.Dense(512, activation="sigmoid", input_shape=(X_train.shape[1],)),
+    keras.layers.Dense(512, activation="sigmoid"),
     keras.layers.Dense(1)])
 
 # Kompilace modelu
