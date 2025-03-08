@@ -15,7 +15,7 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 3
+epochs = 5
 validation_split = 0.2
 test_size = 0.2
 
@@ -48,7 +48,7 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["amplituda"].values
 
-Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)        #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)      #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)
+Model = RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)      #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)
 scaler = Model.Scaler()
 model = Model.Model()
 model_loss = Model.Evaluation()
@@ -63,7 +63,7 @@ data_pro_odhad = [2.5, 1.2, 500, 5.0]
 
 prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
 odhad_amplitudy = prediction.values_predict()
-print(f"Predicted Amplitude: {odhad_amplitudy}")
+print(f"Predicted Amplitude: {float(odhad_amplitudy)}")
  
 vypocet_amplitudy = prediction.calculate_values()
 print(f"Analytická amplituda: {vypocet_amplitudy:.4f}")
