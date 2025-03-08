@@ -1,66 +1,69 @@
-import numpy as np
-import pandas as pd 
 from sklearn.model_selection import train_test_split 
 from sklearn.preprocessing import StandardScaler 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 import joblib 
 
-# Definování rozsahů parametrů
-hmotnost_rozsah = [0.1, 10]
-tlumeni_rozsah = [0, 5]
-tuhost_rozsah = [10, 1000]
-frekvence_rozsah = [0.1, 10]
 
-# Konstantní amplituda budicí síly (např. 10 N)
-F_0 = 10  
+class RandomForestRegresion():
+    def __init__(self,x,y,estimators,test_size):
+        self.X = x
+        self.y = y
+        self.estimators = estimators
+        self.test_size = test_size
+        self.model = None
 
-# Generování náhodných dat
-pocet_vzorku = 10000
-hmotnost = np.random.uniform(hmotnost_rozsah[0], hmotnost_rozsah[1], pocet_vzorku)
-tlumeni = np.random.uniform(tlumeni_rozsah[0], tlumeni_rozsah[1], pocet_vzorku)
-tuhost = np.random.uniform(tuhost_rozsah[0], tuhost_rozsah[1], pocet_vzorku)
-frekvence = np.random.uniform(frekvence_rozsah[0], frekvence_rozsah[1], pocet_vzorku)
+    def Scaler(self):
+        # Rozdělení na trénovací a testovací množinu
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=self.test_size, random_state=42)
 
-# Výpočet amplitudy
-omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
-amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
-# amplituda = np.random.uniform(0, 10, pocet_vzorku)
+        # Normalizace dat
+        scaler = StandardScaler()
+        self.X_train = scaler.fit_transform(self.X_train) 
+        self.X_test = scaler.transform(self.X_test)
+        self.scaler = scaler
+        return scaler
+    
+    def Model(self): 
+        model = RandomForestRegressor(n_estimators=self.estimators, random_state=42)
+        model.fit(self.X_train, self.y_train)
 
-# Vytvoření DataFrame
-data = pd.DataFrame({
-    "hmotnost": hmotnost,
-    "tlumeni": tlumeni,
-    "tuhost": tuhost,
-    "frekvence": frekvence,
-    "amplituda": amplituda
-})
+        self.model = model
+        return model
+    
+    def Evaluation(self):
+        if self.model is None:
+            raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
-# Rozdělení na vstupy a výstupy
-X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
-y = data["amplituda"].values
+        # Predict on the test set
+        y_pred = self.model.predict(self.X_test)
 
-# Rozdělení na trénovací a testovací množinu
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # Calculate Mean Squared Error (MSE)
+        mse = mean_squared_error(self.y_test, y_pred)
+        
+        # Print the evaluation result
+        print(f"Test MSE: {mse:.4f}")
+        return mse  # Return the MSE value
+    
+    def Save(self):
+        joblib.dump(self.model, "random_forest_model.pkl")
+        joblib.dump(self.scaler, "scaler_rf.pkl")
+        print("Model and scaler saved successfully.")
 
-# Normalizace dat
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train) 
-X_test = scaler.transform(X_test)
+    def ModelInfo(self):
+        if self.model is None:
+            raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
-# Vytvoření a trénování modelu Random Forest
-rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-rf_model.fit(X_train, y_train)
+        # Get the model details
+        model_info = {}
 
-# Predikce
-y_pred = rf_model.predict(X_test)
+        # Model name (class name)
+        model_info['model_name'] = self.model.__class__.__name__
+        model_info['scaler_name'] = self.scaler.__class__.__name__
 
-# Vyhodnocení modelu
-mse = mean_squared_error(y_test, y_pred)
-print(f"Testovací MSE: {mse}")
+        # Number of estimators (trees)
+        model_info['n_estimators'] = self.model.n_estimators
 
-# Uložení modelu a scaleru
-joblib.dump(rf_model, "random_forest_model.pkl")
-joblib.dump(scaler, "scaler_rf.pkl")
-
-print("Model a scaler byly úspěšně uloženy.")
+        # Hyperparameters used for the RandomForestRegressor
+        model_info['max_depth'] = self.model.max_depth
+        return model_info

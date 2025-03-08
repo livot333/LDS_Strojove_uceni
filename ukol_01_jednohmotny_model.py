@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split 
-from sklearn.preprocessing import StandardScaler 
-from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 import joblib 
 import prediction_form_network_mark01
 from prediction_form_network_mark01 import Prediction
-import neural_network_keras_seqential
-from neural_network_keras_seqential import Sequential_Neural_network
+from neural_network_keras_seqential import SequentialNeuralNetwork
+from Random_forest_regresion import RandomForestRegresion
 
 # Definování rozsahů parametrů
 hmotnost_rozsah = [0.1, 10]
@@ -16,6 +14,7 @@ tlumeni_rozsah = [0, 5]
 tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
+# vlastnosti neuronove site
 epochs = 3
 validation_split = 0.2
 test_size = 0.2
@@ -49,12 +48,12 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["amplituda"].values
 
-Model = Sequential_Neural_network(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)
+Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)        #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)      #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size)
 scaler = Model.Scaler()
 model = Model.Model()
 model_loss = Model.Evaluation()
 Model.Save()
-model_informations = Model.model_info()
+model_informations = Model.ModelInfo()
 
 print(model_informations)
 
@@ -64,7 +63,7 @@ data_pro_odhad = [2.5, 1.2, 500, 5.0]
 
 prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
 odhad_amplitudy = prediction.values_predict()
-print(f"Predicted Amplitude: {odhad_amplitudy:.4f}")
+print(f"Predicted Amplitude: {odhad_amplitudy}")
  
 vypocet_amplitudy = prediction.calculate_values()
 print(f"Analytická amplituda: {vypocet_amplitudy:.4f}")

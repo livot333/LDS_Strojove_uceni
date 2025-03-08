@@ -7,7 +7,7 @@ from tensorflow import keras
 import joblib 
 
 
-class Sequential_Neural_network():
+class SequentialNeuralNetwork():
     def __init__(self,x,y,epochs,validation_split, test_size):
         self.X = x
         self.y = y
@@ -61,7 +61,7 @@ class Sequential_Neural_network():
         print("Model and scaler saved successfully.")
 
     
-    def model_info(self):
+    def ModelInfo(self):
         # Ensure the model is available before fetching info
         if self.model is None:
             raise ValueError("Model has not been trained yet. Please call 'Model' method first.")

@@ -12,10 +12,11 @@ class Prediction:
     def values_predict(self):
         values_scaled = self.scaler.transform(self.values)  
         amplitude_prediction = self.model.predict(values_scaled)
-        return amplitude_prediction[0][0] 
+        return amplitude_prediction
     
     def calculate_values(self):
         mass, damping, stiffness, frequency = self.values[0]  
         omega = 2 * np.pi * frequency
         amplitude_analytical = self.force / np.sqrt((stiffness - mass * omega**2)**2 + (damping * omega)**2)
         return amplitude_analytical  
+    
