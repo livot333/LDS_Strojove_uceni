@@ -5,6 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow import keras
 import joblib 
+import prediction_form_network_mark01
+from prediction_form_network_mark01 import Prediction 
 
 # Definování rozsahů parametrů
 hmotnost_rozsah = [0.1, 10]
@@ -24,9 +26,9 @@ frekvence = np.random.uniform(frekvence_rozsah[0], frekvence_rozsah[1], pocet_vz
 
 # Výpočet amplitudy (zde je potřeba vložit váš výpočet)
 # Pro zjednodušení použijeme náhodné hodnoty
-# omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
-# amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
-amplituda = np.random.uniform(0, 10, pocet_vzorku)
+omega = 2 * np.pi * frekvence  # Převod frekvence na kruhovou frekvenci
+amplituda = F_0 / np.sqrt((tuhost - hmotnost * omega**2)**2 + (tlumeni * omega)**2)
+# amplituda = np.random.uniform(0, 10, pocet_vzorku)
 
 # Vytvoření Data
 data = pd.DataFrame({
@@ -63,7 +65,16 @@ model.fit(X_train, y_train, epochs=100, validation_split=0.2)
 # Hodnocení modelu
 loss = model.evaluate(X_test, y_test)
 print(f"Testovací MSE: {loss}")
+
+
+data_pro_odhad = [2.5, 1.2, 500, 5.0]
+
+prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
+odhad_amplitudy = prediction.values_predict()
+print(f"Predicted Amplitude: {odhad_amplitudy:.4f}")
  
+vypocet_amplitudy = prediction.calculate_values()
+print(f"Analytická amplituda: {vypocet_amplitudy:.4f}")
 
 # Save the model and scaler
 model.save("jednohmotny_model_mark01.h5")
