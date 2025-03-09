@@ -1,9 +1,13 @@
 import time
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.use("TkAgg")  # Use TkAgg for real-time updates
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
+
 
 # Custom callback to track time per epoch
 class TimeHistory(keras.callbacks.Callback):
@@ -21,13 +25,70 @@ class TimeHistory(keras.callbacks.Callback):
         return self.epoch_times
 
 
+
+class LivePlotCallback(keras.callbacks.Callback):
+    def __init__(self, patience=5):
+        super().__init__()
+        self.train_losses = []
+        self.val_losses = []
+        self.patience = patience
+        self.best_val_loss = float('inf')
+        self.wait = 0  # Counter for patience
+
+        # Set up live plot
+        plt.ion()
+        self.fig, self.ax = plt.subplots()
+        self.line1, = self.ax.plot([], [], label="Train MSE", color="blue")
+        self.line2, = self.ax.plot([], [], label="Validation MSE", color="red")
+        self.ax.set_xlabel("Epochs")
+        self.ax.set_ylabel("MSE Loss")
+        self.ax.legend()
+        self.ax.set_title("Training Progress")
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        train_loss = logs.get("loss")
+        val_loss = logs.get("val_loss")
+
+        if train_loss is not None and val_loss is not None:
+            self.train_losses.append(train_loss)
+            self.val_losses.append(val_loss)
+
+            # Update plot
+            self.line1.set_xdata(range(1, len(self.train_losses) + 1))
+            self.line1.set_ydata(self.train_losses)
+            self.line2.set_xdata(range(1, len(self.val_losses) + 1))
+            self.line2.set_ydata(self.val_losses)
+            self.ax.relim()
+            self.ax.autoscale_view()
+            plt.draw()
+            plt.pause(0.1)  # Pause for real-time updating
+
+            # Check for early stopping
+            if val_loss < self.best_val_loss:
+                self.best_val_loss = val_loss
+                self.wait = 0  # Reset patience counter
+            else:
+                self.wait += 1
+                if self.wait >= self.patience:
+                    print(f"\nEarly stopping at epoch {epoch + 1} (Validation MSE stopped improving)")
+                    self.model.stop_training = True
+
+    def on_train_end(self, logs=None):
+        plt.ioff()
+        plt.show()
+
+
+
+# neural network
 class SequentialNeuralNetwork():
-    def __init__(self, x, y, epochs, validation_split, test_size):
+    def __init__(self, x, y, epochs, validation_split, test_size, patience):
         self.X = x
         self.y = y
         self.epochs = epochs
         self.validation_split = validation_split
         self.test_size = test_size
+        self.patience = patience
         self.model = None
         self.history = None  # To store training history
         self.time_history = TimeHistory()  # Instantiate the custom callback
@@ -44,25 +105,31 @@ class SequentialNeuralNetwork():
         return scaler
 
     def Model(self):
-      
         model = keras.Sequential([
-                    keras.layers.Dense(512, activation="sigmoid", input_shape=(self.X_train.shape[1],)),
-                    keras.layers.Dense(512, activation="sigmoid"),
-                    keras.layers.Dense(1)])
+            keras.layers.Dense(512, activation="sigmoid", input_shape=(self.X_train.shape[1],)),
+            keras.layers.Dense(512, activation="sigmoid"),
+            keras.layers.Dense(1)
+        ])
 
-      
         model.compile(optimizer="adam", loss=keras.losses.MeanSquaredError())
 
-        
+        # Real-time plotting & early stopping callback
+        live_plot_callback = LivePlotCallback(patience=self.patience)
+
+        print("\nStarting training...\n")
         start_time = time.time()
-        self.history = model.fit(self.X_train, self.y_train, epochs=self.epochs, validation_split=self.validation_split, callbacks=[self.time_history])
 
-        # Calculate the total time taken for training
+        self.history = model.fit(
+            self.X_train, self.y_train,
+            epochs=self.epochs,
+            validation_split=self.validation_split,
+            callbacks=[live_plot_callback,self.time_history]
+        )
+
         total_training_time = time.time() - start_time
-
         self.model = model
-        
-        print("Learning is finished.")
+
+        print("\nLearning is finished.")
         print(f"Total training time: {total_training_time:.2f} seconds.")
 
         return model
