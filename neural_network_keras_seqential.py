@@ -7,6 +7,7 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
+import pandas as pd
 
 
 # Custom callback to track time per epoch
@@ -140,6 +141,7 @@ class SequentialNeuralNetwork():
 
         # Evaluate the model on test data
         loss = self.model.evaluate(self.X_test, self.y_test)
+        self.loss = loss
         print(f"Test MSE: {loss}")
         return loss
 
@@ -160,28 +162,45 @@ class SequentialNeuralNetwork():
         model_info['model_name'] = self.model.__class__.__name__
         model_info['scaler_name'] = self.scaler.__class__.__name__
 
-        # Number of layers and neurons
         model_info['layers'] = []
         model_info['num_of_layers'] = 0
+        model_info['neurons_per_layer'] = []  # This will store the list of neurons per layer
+        model_info['activation_functions'] = []  # This will store the list of activation functions
+
         for layer in self.model.layers:
             layer_info = {}
             layer_info['layer_name'] = layer.__class__.__name__
             if isinstance(layer, keras.layers.Dense):
-                layer_info['num_neurons'] = layer.units  # Get the number of neurons directly
+                # Get the number of neurons directly
+                layer_info['num_neurons'] = layer.units
+                # Get the activation function
                 layer_info['activation_function'] = layer.get_config().get('activation', None)
+
+                # Append the number of neurons and activation function to the respective lists
+                model_info['neurons_per_layer'].append(layer.units)
+                model_info['activation_functions'].append(layer.get_config().get('activation', None))
+
+                # Increase the layer count
                 model_info['num_of_layers'] += 1
             else:
                 layer_info['num_neurons'] = None
                 layer_info['activation_function'] = None
+
+            # Add the layer info to the layers list
             model_info['layers'].append(layer_info)
             
 
         # Optimizer name
         model_info['optimizer'] = self.model.optimizer.__class__.__name__
-
-        # Get time per epoch and total training time from the custom callback
-        epoch_times = self.time_history.get_epoch_times()
-        model_info['epoch_times'] = epoch_times
+        model_info['number_of_epochs'] = self.epochs
+    # Calculate the mean of epoch_times (sum divided by length)
+        epoch_times = self.time_history.get_epoch_times()    
+        if epoch_times:  # Check if the list is not empty
+            model_info['mean_epoch_time'] = sum(epoch_times) / len(epoch_times)
+        else:
+            model_info['mean_epoch_time'] = 0  # Default to 0 if the list is empty
         model_info['total_training_time'] = sum(epoch_times)  # Total time of training
+        model_info['mse_loss'] = self.loss
 
         return model_info
+    

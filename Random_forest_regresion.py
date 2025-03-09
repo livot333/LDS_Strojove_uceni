@@ -50,7 +50,7 @@ class RandomForestRegresion():
 
         # Calculate Mean Squared Error (MSE)
         mse = mean_squared_error(self.y_test, y_pred)
-        
+        self.loss = mse
         # Print the evaluation result
         print(f"Test MSE: {mse:.4f}")
         return mse  # Return the MSE value
@@ -76,8 +76,13 @@ class RandomForestRegresion():
 
         # Hyperparameters used for the RandomForestRegressor
         model_info['max_depth'] = self.model.max_depth
+            # Hyperparameters used for the RandomForestRegressor
+        model_info['min_samples_split'] = self.model.min_samples_split
+        model_info['min_samples_leaf'] = self.model.min_samples_leaf
+
 
         # Add training time to the model info
         model_info['training_time'] = self.training_time  # Include training time in the model info
+        model_info['mse_loss'] = self.loss
 
         return model_info

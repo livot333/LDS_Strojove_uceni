@@ -7,6 +7,7 @@ import prediction_form_network_mark01
 from prediction_form_network_mark01 import Prediction
 from neural_network_keras_seqential import SequentialNeuralNetwork
 from Random_forest_regresion import RandomForestRegresion
+from Benchmark import NetworkBenchmark
 
 # Definování rozsahů parametrů
 hmotnost_rozsah = [0.1, 10]
@@ -15,7 +16,7 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 50
+epochs = 35
 validation_split = 0.2
 test_size = 0.2
 learning_patience = 10  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
@@ -61,6 +62,8 @@ model_informations = Model.ModelInfo()
 
 print(model_informations)
 
+benchmark = NetworkBenchmark(model_info=model_informations)
+benchmark.StoreData()
 
 
 data_pro_odhad = [2.5, 1.2, 500, 5.0]
