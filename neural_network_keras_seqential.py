@@ -193,6 +193,7 @@ class SequentialNeuralNetwork():
         # Optimizer name
         model_info['optimizer'] = self.model.optimizer.__class__.__name__
         model_info['number_of_epochs'] = self.epochs
+        model_info['dataset_size'] = len(self.y)
     # Calculate the mean of epoch_times (sum divided by length)
         epoch_times = self.time_history.get_epoch_times()    
         if epoch_times:  # Check if the list is not empty
