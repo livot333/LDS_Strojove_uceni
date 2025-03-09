@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split 
-from sklearn.preprocessing import StandardScaler 
 from tensorflow import keras
 import joblib 
+import prediction_form_network_mark01
+from prediction_form_network_mark01 import Prediction
+from neural_network_keras_seqential import SequentialNeuralNetwork
+from Random_forest_regresion import RandomForestRegresion
+from Benchmark import NetworkBenchmark
 
 # Definování rozsahů parametrů
 hmotnost_rozsah = [0.1, 10]
@@ -11,6 +15,12 @@ tlumeni_rozsah = [0, 5]
 tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
+# vlastnosti neuronove site
+epochs = 100
+validation_split = 0.2
+test_size = 0.2
+learning_patience = 10  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
+                        #neni treba sledovat u RFR
 # Konstantní amplituda budicí síly (nastavíme např. 10 N)
 F_0 = 10  
 
@@ -40,34 +50,30 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["amplituda"].values
 
-# Rozdělení na trénovací a testovací množinu
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)   
+        #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
+        #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
-# Normalizace dat
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train) 
-X_test = scaler.transform(X_test)
+scaler = Model.Scaler()
+model = Model.Model()
+model_loss = Model.Evaluation()
+Model.Save()
+model_informations = Model.ModelInfo()
 
-# Návrh modelu
-model = keras.Sequential([
-    keras.layers.Dense(128, activation="relu", input_shape=(X_train.shape[1],)),
-    keras.layers.Dense(128, activation="relu"),
-    keras.layers.Dense(1)])
+print(model_informations)
 
-# Kompilace modelu
-model.compile(optimizer="adam", loss=keras.losses.MeanSquaredError())
-# Trénování modelu
-model.fit(X_train, y_train, epochs=100, validation_split=0.2)
+benchmark = NetworkBenchmark(model_info=model_informations)
+benchmark.StoreData()
 
-# Hodnocení modelu
-loss = model.evaluate(X_test, y_test)
-print(f"Testovací MSE: {loss}")
+
+data_pro_odhad = [2.5, 1.2, 500, 5.0]
+
+prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
+odhad_amplitudy = prediction.values_predict()
+print(f"Predicted Amplitude: {odhad_amplitudy}")
  
+vypocet_amplitudy = prediction.calculate_values()
+print(f"Analytická amplituda: {vypocet_amplitudy:.4f}")
 
-# Save the model and scaler
-model.save("jednohmotny_model_mark01.h5")
-joblib.dump(scaler, "scaler_4_mark01.pkl")
-
-print("Model and scaler saved successfully.")
 
 
