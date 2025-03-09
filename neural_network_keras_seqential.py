@@ -162,16 +162,19 @@ class SequentialNeuralNetwork():
 
         # Number of layers and neurons
         model_info['layers'] = []
+        model_info['num_of_layers'] = 0
         for layer in self.model.layers:
             layer_info = {}
             layer_info['layer_name'] = layer.__class__.__name__
             if isinstance(layer, keras.layers.Dense):
                 layer_info['num_neurons'] = layer.units  # Get the number of neurons directly
                 layer_info['activation_function'] = layer.get_config().get('activation', None)
+                model_info['num_of_layers'] += 1
             else:
                 layer_info['num_neurons'] = None
                 layer_info['activation_function'] = None
             model_info['layers'].append(layer_info)
+            
 
         # Optimizer name
         model_info['optimizer'] = self.model.optimizer.__class__.__name__
