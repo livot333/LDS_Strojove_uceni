@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd 
 from sklearn.model_selection import train_test_split 
 from tensorflow import keras
-import joblib 
-import prediction_form_network_mark01
 from prediction_form_network_mark01 import Prediction
 from neural_network_keras_seqential import SequentialNeuralNetwork
 from Random_forest_regresion import RandomForestRegresion

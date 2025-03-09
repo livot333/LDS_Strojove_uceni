@@ -15,7 +15,7 @@ class NetworkBenchmark():
             if not os.path.exists(self.K_Sequent_direct):
                 # If the file doesn't exist, create it with the proper columns
                 df = pd.DataFrame(columns=["scaler_name", "num_of_layers", "neurons_per_layer", 
-                                           "activation_functions", "optimizer", "number_of_epochs", "mean_epoch_time",
+                                           "activation_functions", "optimizer", "number_of_epochs","dataset_size", "mean_epoch_time",
                                              "total_training_time","mse_loss"])
                 df.to_excel(self.K_Sequent_direct, index=False, engine='openpyxl')
                 print("Excel file created.")
@@ -30,6 +30,7 @@ class NetworkBenchmark():
                 (df["neurons_per_layer"] == str(self.new_data["neurons_per_layer"])) &
                 (df["activation_functions"] == str(self.new_data["activation_functions"])) &
                 (df["optimizer"] == self.new_data["optimizer"]) &
+                (df["dataset_size"] == self.new_data["dataset_size"]) &
                 (df["number_of_epochs"] == self.new_data["number_of_epochs"])
             ]
 
@@ -49,7 +50,8 @@ class NetworkBenchmark():
                     "neurons_per_layer": str(self.new_data["neurons_per_layer"]),  # Store as string
                     "activation_functions": str(self.new_data["activation_functions"]),  # Store as string
                     "optimizer": self.new_data["optimizer"],
-                    "number_of_epochs": self.new_data["number_of_epochs"],  # New column added
+                    "number_of_epochs": self.new_data["number_of_epochs"],
+                    "dataset_size": self.new_data["dataset_size"],
                     "mean_epoch_time": self.new_data["mean_epoch_time"],
                     "total_training_time": self.new_data["total_training_time"],
                     "mse_loss": self.new_data["mse_loss"]
@@ -68,7 +70,7 @@ class NetworkBenchmark():
                 df = pd.read_excel(self.RFR_direct, engine='openpyxl')
             except FileNotFoundError:
                 df = pd.DataFrame(columns=["scaler_name", "n_estimators", "max_depth", 
-                                           "min_samples_split", "min_samples_leaf", 
+                                           "min_samples_split", "min_samples_leaf", "dataset_size",
                                            "training_time", "mse_loss"])
 
             # Check for duplicates based on model parameters
@@ -77,6 +79,7 @@ class NetworkBenchmark():
                 (df["n_estimators"] == self.new_data["n_estimators"]) &
                 (df["max_depth"] == self.new_data["max_depth"]) &
                 (df["min_samples_split"] == self.new_data["min_samples_split"]) &
+                (df["dataset_size"] == self.new_data["dataset_size"]) &
                 (df["min_samples_leaf"] == self.new_data["min_samples_leaf"])
             ]
 
@@ -96,6 +99,7 @@ class NetworkBenchmark():
                     "max_depth": self.new_data["max_depth"],
                     "min_samples_split": self.new_data["min_samples_split"],
                     "min_samples_leaf": self.new_data["min_samples_leaf"],
+                    "dataset_size": self.new_data["dataset_size"],
                     "training_time": self.new_data["training_time"],
                     "mse_loss": self.new_data["mse_loss"]
                 }
