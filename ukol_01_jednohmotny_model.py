@@ -14,16 +14,16 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 100
+epochs = 200
 validation_split = 0.2
 test_size = 0.2
-learning_patience = 10  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
+learning_patience = 85  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
 # Konstantní amplituda budicí síly (nastavíme např. 10 N)
 F_0 = 10  
 
 # Generování náhodných dat
-pocet_vzorku = 10000
+pocet_vzorku = 100000
 hmotnost = np.random.uniform(hmotnost_rozsah[0], hmotnost_rozsah[1], pocet_vzorku)
 tlumeni = np.random.uniform(tlumeni_rozsah[0], tlumeni_rozsah[1], pocet_vzorku)
 tuhost = np.random.uniform(tuhost_rozsah[0], tuhost_rozsah[1], pocet_vzorku)
@@ -55,7 +55,7 @@ Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_sp
 scaler = Model.Scaler()
 model = Model.Model()
 model_loss = Model.Evaluation()
-Model.Save()
+# Model.Save()
 model_informations = Model.ModelInfo()
 
 print(model_informations)

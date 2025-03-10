@@ -107,8 +107,8 @@ class SequentialNeuralNetwork():
 
     def Model(self):
         model = keras.Sequential([
-            keras.layers.Dense(512, activation="sigmoid", input_shape=(self.X_train.shape[1],)),
-            keras.layers.Dense(512, activation="sigmoid"),
+            keras.layers.Dense(512, activation="selu", input_shape=(self.X_train.shape[1],)),
+            keras.layers.Dense(512, activation="selu"),
             keras.layers.Dense(1)
         ])
 
@@ -192,7 +192,7 @@ class SequentialNeuralNetwork():
 
         # Optimizer name
         model_info['optimizer'] = self.model.optimizer.__class__.__name__
-        model_info['number_of_epochs'] = self.epochs
+        model_info['number_of_epochs'] = len(self.model.history.epoch)
         model_info['dataset_size'] = len(self.y)
     # Calculate the mean of epoch_times (sum divided by length)
         epoch_times = self.time_history.get_epoch_times()    
