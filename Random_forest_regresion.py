@@ -84,5 +84,6 @@ class RandomForestRegresion():
         # Add training time to the model info
         model_info['training_time'] = self.training_time  # Include training time in the model info
         model_info['mse_loss'] = self.loss
+        model_info['dataset_size'] = len(self.y)
 
         return model_info

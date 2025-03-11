@@ -14,16 +14,16 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 200
+epochs = 20
 validation_split = 0.2
 test_size = 0.2
-learning_patience = 85  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
+learning_patience = 25 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
 # Konstantní amplituda budicí síly (nastavíme např. 10 N)
 F_0 = 10  
 
 # Generování náhodných dat
-pocet_vzorku = 100000
+pocet_vzorku = 1000
 hmotnost = np.random.uniform(hmotnost_rozsah[0], hmotnost_rozsah[1], pocet_vzorku)
 tlumeni = np.random.uniform(tlumeni_rozsah[0], tlumeni_rozsah[1], pocet_vzorku)
 tuhost = np.random.uniform(tuhost_rozsah[0], tuhost_rozsah[1], pocet_vzorku)
@@ -48,7 +48,7 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["amplituda"].values
 
-Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)   
+Model = RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)  
         #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
         #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
