@@ -14,16 +14,19 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 100
+epochs = 1000                    # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
 validation_split = 0.2
 test_size = 0.2
-learning_patience = 10  #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
+learning_patience = 25 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
 # Konstantní amplituda budicí síly (nastavíme např. 10 N)
 F_0 = 10  
 
+#Vstupn9 data pro odhad z modelu
+data_pro_odhad = [2.5, 1.2, 500, 5.0]
+
 # Generování náhodných dat
-pocet_vzorku = 10000
+pocet_vzorku = 500000
 hmotnost = np.random.uniform(hmotnost_rozsah[0], hmotnost_rozsah[1], pocet_vzorku)
 tlumeni = np.random.uniform(tlumeni_rozsah[0], tlumeni_rozsah[1], pocet_vzorku)
 tuhost = np.random.uniform(tuhost_rozsah[0], tuhost_rozsah[1], pocet_vzorku)
@@ -48,14 +51,14 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["amplituda"].values
 
-Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)   
+Model = RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)  
         #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
         #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
 scaler = Model.Scaler()
 model = Model.Model()
 model_loss = Model.Evaluation()
-Model.Save()
+# Model.Save()
 model_informations = Model.ModelInfo()
 
 print(model_informations)
@@ -63,8 +66,6 @@ print(model_informations)
 benchmark = NetworkBenchmark(model_info=model_informations)
 benchmark.StoreData()
 
-
-data_pro_odhad = [2.5, 1.2, 500, 5.0]
 
 prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
 odhad_amplitudy = prediction.values_predict()

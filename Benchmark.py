@@ -77,7 +77,7 @@ class NetworkBenchmark():
             duplicate_check = df[
                 (df["scaler_name"] == self.new_data["scaler_name"]) &
                 (df["n_estimators"] == self.new_data["n_estimators"]) &
-                (df["max_depth"] == self.new_data["max_depth"]) &
+                #(df["max_depth"] == self.new_data["max_depth"]) &
                 (df["min_samples_split"] == self.new_data["min_samples_split"]) &
                 (df["dataset_size"] == self.new_data["dataset_size"]) &
                 (df["min_samples_leaf"] == self.new_data["min_samples_leaf"])
