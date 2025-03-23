@@ -15,8 +15,17 @@ class Prediction:
         return amplitude_prediction
     
     def calculate_values(self):
-        mass, damping, stiffness, frequency = self.values[0]  
-        omega = 2 * np.pi * frequency
-        amplitude_analytical = self.force / np.sqrt((stiffness - mass * omega**2)**2 + (damping * omega)**2)
-        return amplitude_analytical  
+        hmotnost, tlumeni, tuhost, frekvence = self.values[0]
+        
+        # Převod frekvence na kruhovou frekvenci
+        omega0 = np.sqrt(tuhost / hmotnost)
+        bkr = 2 * np.sqrt(tuhost * hmotnost)
+        bp = tlumeni / bkr
+        omega = 2 * np.pi * frekvence
+        ni = omega / omega0
+        
+        # Výpočet amplitudy
+        pomerny_utlum = 1 / np.sqrt(((1 - (ni**2))**2) + (2 * bp * ni)**2)
+        
+        return pomerny_utlum
     

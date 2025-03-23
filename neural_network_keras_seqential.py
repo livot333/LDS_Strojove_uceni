@@ -107,14 +107,9 @@ class SequentialNeuralNetwork():
 
     def Model(self):
         model = keras.Sequential([
-
-            keras.layers.Dense(36, activation="relu", input_shape=(self.X_train.shape[1],)),
-            keras.layers.Dense(64, activation="relu"),
+            keras.layers.Dense(128, activation="relu", input_shape=(self.X_train.shape[1],)),
             keras.layers.Dense(128, activation="relu"),
-            keras.layers.Dense(512, activation="relu"),
-            keras.layers.Dense(128, activation="relu"),
-            keras.layers.Dense(64, activation="relu"),
-            keras.layers.Dense(1)
+            keras.layers.Dense(1),
         ])
 
         model.compile(optimizer="adam", loss=keras.losses.MeanSquaredError())
