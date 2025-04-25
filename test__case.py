@@ -25,21 +25,22 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 110              # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
+epochs = 50              # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
 validation_split = 0.2
 test_size = 0.2
 learning_patience = 15 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
-activation_function_list = ["relu", "selu", "sigmoid", "gelu", "leaky_relu", "tanh", "swish", "mish", "elu"]
+activation_function = "relu"
 kernel_initializer = "he_normal"
-optimizer_list = ["rmsprop","adagrad","adamax","nadam","adamw","lion"]
+optimizer = "adam"
 dropout_rate = 0.2      #drzet mezi 0.1 a 0.5
-l1_value = 0.00001
-l2_value = 0.0001
-hidden_layer_units_list = [[32,64],[32,64,64],[32,128,64],[32,128,128],[32,64,128],[64,64,128], [64,128,128]]
+l1_value = 0.0001
+l2_value = 0.001
+hidden_layer_units = [32,128,128]
+
 # vlastnosti learning rate scheduleru 
 learn_rate_sched_patience = 10          # mensi nez learning_patience
-learn_rate_sched_factor = 0.25           #idealne mezi 0.1 a 0.5
+learn_rate_sched_factor = 0.1          #idealne mezi 0.1 a 0.5
 
 
 #Vstupn9 data pro odhad z modelu
@@ -82,10 +83,8 @@ y = data["pomerny_utlum"].values
 
 
 
-for optimizer in optimizer_list:
-        for activation_function in activation_function_list:
-                for hidden_layer_units in hidden_layer_units_list:
-                        Model = SequentialNeuralNetwork(
+
+Model = SequentialNeuralNetwork(
                         x=X,
                         y=y,
                         epochs=epochs,
@@ -105,16 +104,16 @@ for optimizer in optimizer_list:
                                 #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
                                 #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
-                        scaler = Model.Scaler()
-                        model = Model.Model()
-                        model_loss = Model.Evaluation()
-                        # Model.Save()
-                        model_informations = Model.ModelInfo()
+scaler = Model.Scaler()
+model = Model.Model()
+model_loss = Model.Evaluation()
+# Model.Save()
+model_informations = Model.ModelInfo()
 
-                        print(model_informations)
+print(model_informations)
 
-                        benchmark = NetworkBenchmark(model_info=model_informations)
-                        benchmark.StoreData()
+benchmark = NetworkBenchmark(model_info=model_informations)
+benchmark.StoreData()
 
 
 
@@ -126,6 +125,3 @@ for optimizer in optimizer_list:
 
 # vypocet_amplitudy = prediction.calculate_values()
 # print(f"Analyticky poměrný útlum: {vypocet_amplitudy:.4f}")
-
-
-
