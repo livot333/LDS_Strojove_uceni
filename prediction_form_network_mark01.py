@@ -3,11 +3,10 @@ import joblib
 from tensorflow import keras
 
 class Prediction:
-    def __init__(self, model, scaler, values, force):
+    def __init__(self, model, scaler, values):
         self.model = model
         self.scaler = scaler
         self.values = np.array([values])  
-        self.force = force
     
     def values_predict(self):
         values_scaled = self.scaler.transform(self.values)  

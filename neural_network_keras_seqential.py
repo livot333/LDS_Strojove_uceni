@@ -28,11 +28,11 @@ class TimeHistory(keras.callbacks.Callback):
 
 
 class LivePlotCallback(keras.callbacks.Callback):
-    def __init__(self, patience=5):
+    def __init__(self,patience = 5):
         super().__init__()
         self.train_losses = []
         self.val_losses = []
-        self.patience = patience
+        self.patience  = patience
         self.best_val_loss = float('inf')
         self.wait = 0  # Counter for patience
 
@@ -83,7 +83,7 @@ class LivePlotCallback(keras.callbacks.Callback):
 
 # neural network
 class SequentialNeuralNetwork():
-    def __init__(self, x, y, epochs, validation_split, test_size, patience):
+    def __init__(self, x, y, epochs, validation_split, test_size, patience,learn_rate_sched_factor,learn_rate_sched_patience,activation_function,kernel_initializer,optimizer,dropout_rate):
         self.X = x
         self.y = y
         self.epochs = epochs
@@ -92,7 +92,14 @@ class SequentialNeuralNetwork():
         self.patience = patience
         self.model = None
         self.history = None  # To store training history
+        self.Learning_rate_scheduler = None
         self.time_history = TimeHistory()  # Instantiate the custom callback
+        self.learn_rate_sched_factor = learn_rate_sched_factor
+        self.learn_rate_sched_patience = learn_rate_sched_patience
+        self.activation_function = activation_function 
+        self.kernel_initializer = kernel_initializer
+        self.optimizer = optimizer
+        self.dropout_rate = dropout_rate
 
     def Scaler(self):
         # Split the data into training and test sets
@@ -107,13 +114,27 @@ class SequentialNeuralNetwork():
 
     def Model(self):
         model = keras.Sequential([
-            keras.layers.Dense(128, activation="relu", input_shape=(self.X_train.shape[1],)),
-            keras.layers.Dense(128, activation="relu"),
+            keras.layers.Dense(32, activation=self.activation_function, input_shape=(self.X_train.shape[1],), kernel_initializer=self.kernel_initializer),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dropout(self.dropout_rate), 
+            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dropout(self.dropout_rate),
+            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
+            keras.layers.BatchNormalization(),
+            keras.layers.Dropout(self.dropout_rate),
             keras.layers.Dense(1),
         ])
 
-        model.compile(optimizer="adam", loss=keras.losses.MeanSquaredError())
-
+        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError(), metrics=['accuracy'])
+        
+        Learning_rate_scheduler = keras.callbacks.ReduceLROnPlateau(
+            monitor='val_loss',
+            factor = self.learn_rate_sched_factor,
+            patience = self.learn_rate_sched_patience,  # Menší patience než u Early Stopping
+            min_lr=0.0001 # Minimální rychlost učení
+            )
+        
         # Real-time plotting & early stopping callback
         live_plot_callback = LivePlotCallback(patience=self.patience)
 
@@ -124,11 +145,12 @@ class SequentialNeuralNetwork():
             self.X_train, self.y_train,
             epochs=self.epochs,
             validation_split=self.validation_split,
-            callbacks=[live_plot_callback,self.time_history]
+            callbacks=[live_plot_callback,self.time_history, Learning_rate_scheduler]
         )
 
         total_training_time = time.time() - start_time
         self.model = model
+        self.Learning_rate_scheduler = Learning_rate_scheduler
 
         print("\nLearning is finished.")
         print(f"Total training time: {total_training_time:.2f} seconds.")
@@ -161,6 +183,7 @@ class SequentialNeuralNetwork():
         # Model name (class name)
         model_info['model_name'] = self.model.__class__.__name__
         model_info['scaler_name'] = self.scaler.__class__.__name__
+        model_info['learning_rate_scheduler'] = self.Learning_rate_scheduler.__class__.__name__
 
         model_info['layers'] = []
         model_info['num_of_layers'] = 0
@@ -175,6 +198,7 @@ class SequentialNeuralNetwork():
                 layer_info['num_neurons'] = layer.units
                 # Get the activation function
                 layer_info['activation_function'] = layer.get_config().get('activation', None)
+                
 
                 # Append the number of neurons and activation function to the respective lists
                 model_info['neurons_per_layer'].append(layer.units)
@@ -194,6 +218,7 @@ class SequentialNeuralNetwork():
         model_info['optimizer'] = self.model.optimizer.__class__.__name__
         model_info['number_of_epochs'] = model_info['number_of_epochs'] = len(self.history.epoch) if hasattr(self.history, "epoch") else 0
         model_info['dataset_size'] = len(self.y)
+        model_info['kernel_initializer'] = self.kernel_initializer
     # Calculate the mean of epoch_times (sum divided by length)
         epoch_times = self.time_history.get_epoch_times()    
         if epoch_times:  # Check if the list is not empty
@@ -201,6 +226,7 @@ class SequentialNeuralNetwork():
         else:
             model_info['mean_epoch_time'] = 0  # Default to 0 if the list is empty
         model_info['total_training_time'] = sum(epoch_times)  # Total time of training
+        model_info['dropout_rate'] = self.dropout_rate
         model_info['mse_loss'] = self.loss
 
         return model_info

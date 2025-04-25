@@ -15,8 +15,8 @@ class NetworkBenchmark():
             if not os.path.exists(self.K_Sequent_direct):
                 # If the file doesn't exist, create it with the proper columns
                 df = pd.DataFrame(columns=["scaler_name", "num_of_layers", "neurons_per_layer", 
-                                           "activation_functions", "optimizer", "number_of_epochs","dataset_size", "mean_epoch_time",
-                                             "total_training_time","mse_loss"])
+                                           "activation_functions", "optimizer","learning_rate_scheduler","kernel_initializer","dropout_rate","number_of_epochs","dataset_size", "mean_epoch_time",
+                                            "total_training_time","mse_loss"])
                 df.to_excel(self.K_Sequent_direct, index=False, engine='openpyxl')
                 print("Excel file created.")
             else:
@@ -30,6 +30,9 @@ class NetworkBenchmark():
                 (df["neurons_per_layer"] == str(self.new_data["neurons_per_layer"])) &
                 (df["activation_functions"] == str(self.new_data["activation_functions"])) &
                 (df["optimizer"] == self.new_data["optimizer"]) &
+                (df["learning_rate_scheduler"] == self.new_data["learning_rate_scheduler"]) &
+                (df["kernel_initializer"] == self.new_data["kernel_initializer"]) &
+                (df["dropout_rate"] == self.new_data["dropout_rate"]) &
                 (df["dataset_size"] == self.new_data["dataset_size"]) &
                 (df["number_of_epochs"] == self.new_data["number_of_epochs"])
             ]
@@ -50,6 +53,9 @@ class NetworkBenchmark():
                     "neurons_per_layer": str(self.new_data["neurons_per_layer"]),  # Store as string
                     "activation_functions": str(self.new_data["activation_functions"]),  # Store as string
                     "optimizer": self.new_data["optimizer"],
+                    "learning_rate_scheduler":self.new_data["learning_rate_scheduler"],
+                    "kernel_initializer": self.new_data["kernel_initializer"],
+                    "dropout_rate": self.new_data["dropout_rate"],
                     "number_of_epochs": self.new_data["number_of_epochs"],
                     "dataset_size": self.new_data["dataset_size"],
                     "mean_epoch_time": self.new_data["mean_epoch_time"],
