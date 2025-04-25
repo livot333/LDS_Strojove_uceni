@@ -14,13 +14,20 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 15                   # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
+epochs = 10               # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
 validation_split = 0.2
 test_size = 0.2
 learning_patience = 25 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
-# Konstantní amplituda budicí síly (nastavíme např. 10 N)
-F_0 = 10 
+activation_function = "relu"
+kernel_initializer = "he_normal"
+optimizer = "adam"
+dropout_rate = 0.2      #drzet mezi 0.1 a 0.5
+
+# vlastnosti learning rate scheduleru 
+learn_rate_sched_patience = 10          # mensi nez learning_patience
+learn_rate_sched_factor = 0.1           #idealne mezi 0.1 a 0.5
+
 
 #Vstupn9 data pro odhad z modelu
 data_pro_odhad = [2.5, 1.2, 500, 5.0]
@@ -55,7 +62,20 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence"]].values
 y = data["pomerny_utlum"].values
 
-Model = SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
+Model = SequentialNeuralNetwork(
+    x=X,
+    y=y,
+    epochs=epochs,
+    validation_split=validation_split,
+    test_size=test_size,
+    patience=learning_patience,
+    learn_rate_sched_factor=learn_rate_sched_factor, 
+    learn_rate_sched_patience=learn_rate_sched_patience,
+    activation_function= activation_function,
+    kernel_initializer=kernel_initializer,
+    optimizer=optimizer,
+    dropout_rate=dropout_rate 
+    )  
         #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
         #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
@@ -70,8 +90,7 @@ print(model_informations)
 benchmark = NetworkBenchmark(model_info=model_informations)
 benchmark.StoreData()
 
-
-prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad,force=F_0)
+prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad)
 odhad_amplitudy = prediction.values_predict()
 print(f"Predikovaný poměrný útlum: {odhad_amplitudy}")
  
