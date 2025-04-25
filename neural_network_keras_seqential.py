@@ -1,4 +1,6 @@
 import time
+import os
+import random
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -7,7 +9,16 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
-import pandas as pd
+from keras import regularizers
+import tensorflow as tf
+
+## ===== normalizace======
+my_seed = 42
+os.environ['PYTHONHASHSEED'] = str(my_seed) 
+random.seed(my_seed) 
+np.random.seed(my_seed) 
+tf.random.set_seed(my_seed)
+tf.keras.utils.set_random_seed(my_seed)
 
 
 # Custom callback to track time per epoch
@@ -77,13 +88,13 @@ class LivePlotCallback(keras.callbacks.Callback):
 
     def on_train_end(self, logs=None):
         plt.ioff()
-        plt.show()
+        plt.close(self.fig)
 
 
 
 # neural network
 class SequentialNeuralNetwork():
-    def __init__(self, x, y, epochs, validation_split, test_size, patience,learn_rate_sched_factor,learn_rate_sched_patience,activation_function,kernel_initializer,optimizer,dropout_rate):
+    def __init__(self, x, y, epochs, validation_split, test_size, patience,learn_rate_sched_factor,learn_rate_sched_patience,activation_function,kernel_initializer,optimizer,dropout_rate,l1_value,l2_value,hidden_layer_units):
         self.X = x
         self.y = y
         self.epochs = epochs
@@ -100,6 +111,10 @@ class SequentialNeuralNetwork():
         self.kernel_initializer = kernel_initializer
         self.optimizer = optimizer
         self.dropout_rate = dropout_rate
+        self.l1_value = l1_value
+        self.l2_value = l2_value
+        self.hidden_layer_units = hidden_layer_units
+
 
     def Scaler(self):
         # Split the data into training and test sets
@@ -113,20 +128,35 @@ class SequentialNeuralNetwork():
         return scaler
 
     def Model(self):
-        model = keras.Sequential([
-            keras.layers.Dense(32, activation=self.activation_function, input_shape=(self.X_train.shape[1],), kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate), 
-            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate),
-            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate),
-            keras.layers.Dense(1),
-        ])
+        # Vytvoříme instanci regularizátoru (stejná logika jako dříve)
+        regularizer = None
+        if self.l1_value > 0 or self.l2_value > 0:
+             regularizer = regularizers.L1L2(l1=self.l1_value, l2=self.l2_value)
 
-        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError(), metrics=['accuracy'])
+        model = keras.Sequential()
+        for i, units in enumerate(self.hidden_layer_units):
+            # Přidáme Dense vrstvu
+            if i == 0: # První skrytá vrstva potřebuje input_shape
+                model.add(keras.layers.Dense(units=units, # Používáme počet neuronů z aktuální pozice v seznamu
+                                activation=self.activation_function,
+                                input_shape=(self.X_train.shape[1],), # Input shape jen u první vrstvy
+                                kernel_initializer=self.kernel_initializer,
+                                kernel_regularizer=regularizer))
+            else: # Ostatní skryté vrstvy
+                model.add(keras.layers.Dense(units=units, # Používáme počet neuronů z aktuální pozice v seznamu
+                                activation=self.activation_function,
+                                kernel_initializer=self.kernel_initializer,
+                                kernel_regularizer=regularizer))
+
+            model.add(keras.layers.BatchNormalization())
+
+            if self.dropout_rate > 0:
+                 model.add(keras.layers.Dropout(rate=self.dropout_rate))
+
+        model.add(keras.layers.Dense(units=1)) # Volitelná regularizace i na výstupu
+
+
+        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError())
         
         Learning_rate_scheduler = keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
@@ -228,6 +258,7 @@ class SequentialNeuralNetwork():
         model_info['total_training_time'] = sum(epoch_times)  # Total time of training
         model_info['dropout_rate'] = self.dropout_rate
         model_info['mse_loss'] = self.loss
+        model_info["regulaizers_values"] = [self.l1_value,self.l2_value]
 
         return model_info
     
