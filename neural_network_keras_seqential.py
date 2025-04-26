@@ -133,6 +133,15 @@ class SequentialNeuralNetwork():
         if self.l1_value > 0 or self.l2_value > 0:
              regularizer = regularizers.L1L2(l1=self.l1_value, l2=self.l2_value)
 
+        sample_weights = np.ones(len(self.y_train)) # Výchozí váha 1 pro všechny
+        resonance_threshold = 1# Stejný práh
+        resonance_threshold_high = 12.5 # Stejný práh
+        low_weight = 0.0001 # Váha pro body nad prahem
+        lowest_weights = 0.0000001
+
+        sample_weights[self.y_train >= resonance_threshold] = low_weight
+        sample_weights[self.y_train >= resonance_threshold_high] = lowest_weights
+
         model = keras.Sequential()
         for i, units in enumerate(self.hidden_layer_units):
             # Přidáme Dense vrstvu
@@ -153,10 +162,10 @@ class SequentialNeuralNetwork():
             if self.dropout_rate > 0:
                  model.add(keras.layers.Dropout(rate=self.dropout_rate))
 
-        model.add(keras.layers.Dense(units=1)) # Volitelná regularizace i na výstupu
+        model.add(keras.layers.Dense(units=1,activation="softplus")) # Volitelná regularizace i na výstupu
 
 
-        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError())
+        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError(),metrics=[keras.metrics.MeanAbsoluteError()])
         
         Learning_rate_scheduler = keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
@@ -175,7 +184,8 @@ class SequentialNeuralNetwork():
             self.X_train, self.y_train,
             epochs=self.epochs,
             validation_split=self.validation_split,
-            callbacks=[live_plot_callback,self.time_history, Learning_rate_scheduler]
+            callbacks=[live_plot_callback,self.time_history, Learning_rate_scheduler],
+            sample_weight=sample_weights
         )
 
         total_training_time = time.time() - start_time
@@ -192,9 +202,16 @@ class SequentialNeuralNetwork():
             raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
         # Evaluate the model on test data
-        loss = self.model.evaluate(self.X_test, self.y_test)
+        resonance_threshold = 5
+        non_resonant_indices = self.y_test <= resonance_threshold
+        X_test_filtered = self.X_test[non_resonant_indices]
+        y_test_filtered = self.y_test[non_resonant_indices]
+
+        loss = self.model.evaluate(X_test_filtered , y_test_filtered)
         self.loss = loss
         print(f"Test MSE: {loss}")
+
+
         return loss
 
     def Save(self):

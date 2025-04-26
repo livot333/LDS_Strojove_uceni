@@ -37,14 +37,14 @@ optimizer_list = "rmsprop"
 dropout_rate = 0.2      #drzet mezi 0.1 a 0.5
 l1_value = 0.01
 l2_value = 0.01
-hidden_layer_units_list =  [512,512,512,128]
+hidden_layer_units_list =  [512,512,512,128,64]
 # vlastnosti learning rate scheduleru 
 learn_rate_sched_patience = 8          # mensi nez learning_patience
 learn_rate_sched_factor = 0.1          #idealne mezi 0.1 a 0.5
 
 
 #Vstupn9 data pro odhad z modelu
-data_pro_odhad = [2.5, 1.2, 500, 5.0]
+data_pro_odhad = [2.5, 1.2, 500, 5.0,14.1421356237,31.4159,70.7106781,0.01697,2.2214395927]
 
 # Generování náhodných dat
 pocet_vzorku = 10000
@@ -117,14 +117,14 @@ benchmark.StoreData()
 
 
 
-# prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad)
+prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad)
 
 
-# odhad_amplitudy = prediction.values_predict()
-# print(f"Predikovaný poměrný útlum: {odhad_amplitudy}")
+odhad_amplitudy = prediction.values_predict()
+print(f"Predikovaný poměrný útlum: {odhad_amplitudy}")
 
-# vypocet_amplitudy = prediction.calculate_values()
-# print(f"Analyticky poměrný útlum: {vypocet_amplitudy:.4f}")
+vypocet_amplitudy = prediction.calculate_values()
+print(f"Analyticky poměrný útlum: {vypocet_amplitudy:.4f}")
 
 
 
