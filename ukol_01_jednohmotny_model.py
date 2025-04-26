@@ -9,6 +9,7 @@ from Benchmark import NetworkBenchmark
 import os
 import random
 import tensorflow as tf 
+import itertools
 
 my_seed = 42
 os.environ['PYTHONHASHSEED'] = str(my_seed) 
@@ -30,16 +31,16 @@ validation_split = 0.2
 test_size = 0.2
 learning_patience = 15 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
-activation_function_list = ["relu", "selu", "sigmoid", "gelu", "leaky_relu", "tanh", "swish", "mish", "elu"]
+activation_function_list = "relu"
 kernel_initializer = "he_normal"
-optimizer_list = ["rmsprop","adagrad","adamax","nadam","adamw","lion"]
+optimizer_list = "rmsprop"
 dropout_rate = 0.2      #drzet mezi 0.1 a 0.5
-l1_value = 0.00001
-l2_value = 0.0001
-hidden_layer_units_list = [[32,64],[32,64,64],[32,128,64],[32,128,128],[32,64,128],[64,64,128], [64,128,128]]
+l1_value = 0.01
+l2_value = 0.01
+hidden_layer_units_list =  [512,512,512,128]
 # vlastnosti learning rate scheduleru 
-learn_rate_sched_patience = 10          # mensi nez learning_patience
-learn_rate_sched_factor = 0.25           #idealne mezi 0.1 a 0.5
+learn_rate_sched_patience = 8          # mensi nez learning_patience
+learn_rate_sched_factor = 0.1          #idealne mezi 0.1 a 0.5
 
 
 #Vstupn9 data pro odhad z modelu
@@ -82,39 +83,37 @@ y = data["pomerny_utlum"].values
 
 
 
-for optimizer in optimizer_list:
-        for activation_function in activation_function_list:
-                for hidden_layer_units in hidden_layer_units_list:
-                        Model = SequentialNeuralNetwork(
-                        x=X,
-                        y=y,
-                        epochs=epochs,
-                        validation_split=validation_split,
-                        test_size=test_size,
-                        patience=learning_patience,
-                        learn_rate_sched_factor=learn_rate_sched_factor, 
-                        learn_rate_sched_patience=learn_rate_sched_patience,
-                        activation_function= activation_function,
-                        kernel_initializer=kernel_initializer,
-                        optimizer=optimizer,
-                        dropout_rate=dropout_rate, 
-                        l1_value=l1_value,
-                        l2_value=l2_value,
-                        hidden_layer_units=hidden_layer_units
-                        )  
-                                #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
-                                #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
-                        scaler = Model.Scaler()
-                        model = Model.Model()
-                        model_loss = Model.Evaluation()
-                        # Model.Save()
-                        model_informations = Model.ModelInfo()
+Model = SequentialNeuralNetwork(
+x=X,
+y=y,
+epochs=epochs,
+validation_split=validation_split,
+test_size=test_size,
+patience=learning_patience,
+learn_rate_sched_factor=learn_rate_sched_factor, 
+learn_rate_sched_patience=learn_rate_sched_patience,
+activation_function= activation_function_list,
+kernel_initializer=kernel_initializer,
+optimizer=optimizer_list,
+dropout_rate=dropout_rate, 
+l1_value=l1_value,
+l2_value=l2_value,
+hidden_layer_units=hidden_layer_units_list
+)  
+        #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
+        #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
 
-                        print(model_informations)
+scaler = Model.Scaler()
+model = Model.Model()
+model_loss = Model.Evaluation()
+# Model.Save()
+model_informations = Model.ModelInfo()
 
-                        benchmark = NetworkBenchmark(model_info=model_informations)
-                        benchmark.StoreData()
+print(model_informations)
+
+benchmark = NetworkBenchmark(model_info=model_informations)
+benchmark.StoreData()
 
 
 

@@ -9,6 +9,7 @@ from Benchmark import NetworkBenchmark
 import os
 import random
 import tensorflow as tf 
+import matplotlib.pyplot as plt
 
 my_seed = 42
 os.environ['PYTHONHASHSEED'] = str(my_seed) 
@@ -22,7 +23,7 @@ tf.keras.utils.set_random_seed(my_seed)
 hmotnost_rozsah = [0.1, 10]
 tlumeni_rozsah = [0, 5]
 tuhost_rozsah = [10, 1000]
-frekvence_rozsah = [0.1, 10]
+frekvence_rozsah = [7, 17]
 
 # vlastnosti neuronove site
 epochs = 50              # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
@@ -77,51 +78,54 @@ data = pd.DataFrame({
     "ni":ni
         })
 
-# Rozdělení na vstupy a výstupy
-X = data[["hmotnost", "tlumeni", "tuhost", "frekvence","vlastni_frekvence","vlastni_frekvence1","bkr","bp","ni"]].values
-y = data["pomerny_utlum"].values
+# --- KÓD PRO ZOBRAZENÍ 3D GRAFŮ ---
+
+print("\nVytváření 3D grafů pro vizualizaci závislostí...")
+
+# Graf 1: Závislost na Frekvenci a Tlumení (původní vstupy)
+fig1 = plt.figure(figsize=(10, 7))
+ax1 = fig1.add_subplot(111, projection='3d') # Přidání 3D subplotu
+
+# Vykreslení bodů. Barva bodů může reprezentovat hodnotu poměrného útlumu
+scatter1 = ax1.scatter(data["frekvence"], data["tlumeni"], data["pomerny_utlum"], c=data["pomerny_utlum"], cmap='viridis', marker='.')
+
+# Nastavení popisků os a názvu grafu
+ax1.set_xlabel("Frekvence")
+ax1.set_ylabel("Tlumeni")
+ax1.set_zlabel("Pomerny utlum")
+ax1.set_title("Zavislost Pomerny utlum na Frekvenci a Tlumeni")
+
+# Přidání barevné legendy (colorbar)
+fig1.colorbar(scatter1, label="Pomerny utlum")
 
 
+# Graf 2: Závislost na Poměru frekvencí (ni) a Poměrném útlumu (bp) (vypočítané rysy)
+fig2 = plt.figure(figsize=(10, 7))
+ax2 = fig2.add_subplot(111, projection='3d')
+
+scatter2 = ax2.scatter(data["ni"], data["bp"], data["pomerny_utlum"], c=data["pomerny_utlum"], cmap='viridis', marker='.')
+
+ax2.set_xlabel("Pomer frekvenci (ni)")
+ax2.set_ylabel("Pomerny utlum systemu (bp)") # Přesnější popisek pro bp
+ax2.set_zlabel("Pomerny utlum (cil)")
+ax2.set_title("Zavislost Pomerny utlum na Pomeru frekvenci (ni) a Pomernem utlumu systemu (bp)")
+
+fig2.colorbar(scatter2, label="Pomerny utlum")
 
 
-Model = SequentialNeuralNetwork(
-                        x=X,
-                        y=y,
-                        epochs=epochs,
-                        validation_split=validation_split,
-                        test_size=test_size,
-                        patience=learning_patience,
-                        learn_rate_sched_factor=learn_rate_sched_factor, 
-                        learn_rate_sched_patience=learn_rate_sched_patience,
-                        activation_function= activation_function,
-                        kernel_initializer=kernel_initializer,
-                        optimizer=optimizer,
-                        dropout_rate=dropout_rate, 
-                        l1_value=l1_value,
-                        l2_value=l2_value,
-                        hidden_layer_units=hidden_layer_units
-                        )  
-                                #RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
-                                #SequentialNeuralNetwork(X,y,epochs=epochs,validation_split=validation_split,test_size=test_size,patience=learning_patience)  
+# Graf 3: Závislost na Tuhosti a Hmotnosti (původní vstupy)
+fig3 = plt.figure(figsize=(10, 7))
+ax3 = fig3.add_subplot(111, projection='3d')
 
-scaler = Model.Scaler()
-model = Model.Model()
-model_loss = Model.Evaluation()
-# Model.Save()
-model_informations = Model.ModelInfo()
+scatter3 = ax3.scatter(data["tuhost"], data["hmotnost"], data["pomerny_utlum"], c=data["pomerny_utlum"], cmap='viridis', marker='.')
 
-print(model_informations)
+ax3.set_xlabel("Tuhost")
+ax3.set_ylabel("Hmotnost")
+ax3.set_zlabel("Pomerny utlum")
+ax3.set_title("Zavislost Pomerny utlum na Tuhosti a Hmotnosti")
 
-benchmark = NetworkBenchmark(model_info=model_informations)
-benchmark.StoreData()
+fig3.colorbar(scatter3, label="Pomerny utlum")
 
 
-
-# prediction = Prediction(model=model,scaler=scaler,values=data_pro_odhad)
-
-
-# odhad_amplitudy = prediction.values_predict()
-# print(f"Predikovaný poměrný útlum: {odhad_amplitudy}")
-
-# vypocet_amplitudy = prediction.calculate_values()
-# print(f"Analyticky poměrný útlum: {vypocet_amplitudy:.4f}")
+# Zobraz všechny vytvořené grafy
+plt.show()
