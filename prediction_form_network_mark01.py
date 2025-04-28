@@ -14,7 +14,7 @@ class Prediction:
         return amplitude_prediction
     
     def calculate_values(self):
-        hmotnost, tlumeni, tuhost, frekvence = self.values[0]
+        hmotnost, tlumeni, tuhost, frekvence,a,b,c,d,e = self.values[0]
         
         # Převod frekvence na kruhovou frekvenci
         omega0 = np.sqrt(tuhost / hmotnost)

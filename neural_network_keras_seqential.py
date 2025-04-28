@@ -1,4 +1,6 @@
 import time
+import os
+import random
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -7,7 +9,16 @@ import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
-import pandas as pd
+from keras import regularizers
+import tensorflow as tf
+
+## ===== normalizace======
+my_seed = 42
+os.environ['PYTHONHASHSEED'] = str(my_seed) 
+random.seed(my_seed) 
+np.random.seed(my_seed) 
+tf.random.set_seed(my_seed)
+tf.keras.utils.set_random_seed(my_seed)
 
 
 # Custom callback to track time per epoch
@@ -37,14 +48,14 @@ class LivePlotCallback(keras.callbacks.Callback):
         self.wait = 0  # Counter for patience
 
         # Set up live plot
-        plt.ion()
-        self.fig, self.ax = plt.subplots()
-        self.line1, = self.ax.plot([], [], label="Train MSE", color="blue")
-        self.line2, = self.ax.plot([], [], label="Validation MSE", color="red")
-        self.ax.set_xlabel("Epochs")
-        self.ax.set_ylabel("MSE Loss")
-        self.ax.legend()
-        self.ax.set_title("Training Progress")
+        # plt.ion()
+        # self.fig, self.ax = plt.subplots()
+        # self.line1, = self.ax.plot([], [], label="Train MSE", color="blue")
+        # self.line2, = self.ax.plot([], [], label="Validation MSE", color="red")
+        # self.ax.set_xlabel("Epochs")
+        # self.ax.set_ylabel("MSE Loss")
+        # self.ax.legend()
+        # self.ax.set_title("Training Progress")
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
@@ -56,14 +67,14 @@ class LivePlotCallback(keras.callbacks.Callback):
             self.val_losses.append(val_loss)
 
             # Update plot
-            self.line1.set_xdata(range(1, len(self.train_losses) + 1))
-            self.line1.set_ydata(self.train_losses)
-            self.line2.set_xdata(range(1, len(self.val_losses) + 1))
-            self.line2.set_ydata(self.val_losses)
-            self.ax.relim()
-            self.ax.autoscale_view()
-            plt.draw()
-            plt.pause(0.1)  # Pause for real-time updating
+            # self.line1.set_xdata(range(1, len(self.train_losses) + 1))
+            # self.line1.set_ydata(self.train_losses)
+            # self.line2.set_xdata(range(1, len(self.val_losses) + 1))
+            # self.line2.set_ydata(self.val_losses)
+            # self.ax.relim()
+            # self.ax.autoscale_view()
+            # # plt.draw()
+            # # plt.pause(0.1)  # Pause for real-time updating
 
             # Check for early stopping
             if val_loss < self.best_val_loss:
@@ -75,15 +86,15 @@ class LivePlotCallback(keras.callbacks.Callback):
                     print(f"\nEarly stopping at epoch {epoch + 1} (Validation MSE stopped improving)")
                     self.model.stop_training = True
 
-    def on_train_end(self, logs=None):
-        plt.ioff()
-        plt.show()
+    # def on_train_end(self, logs=None):
+    #     plt.ioff()
+    #     plt.close(self.fig)
 
 
 
 # neural network
 class SequentialNeuralNetwork():
-    def __init__(self, x, y, epochs, validation_split, test_size, patience,learn_rate_sched_factor,learn_rate_sched_patience,activation_function,kernel_initializer,optimizer,dropout_rate):
+    def __init__(self, x, y, epochs, validation_split, test_size, patience,learn_rate_sched_factor,learn_rate_sched_patience,activation_function,kernel_initializer,optimizer,dropout_rate,l1_value,l2_value,hidden_layer_units):
         self.X = x
         self.y = y
         self.epochs = epochs
@@ -100,6 +111,10 @@ class SequentialNeuralNetwork():
         self.kernel_initializer = kernel_initializer
         self.optimizer = optimizer
         self.dropout_rate = dropout_rate
+        self.l1_value = l1_value
+        self.l2_value = l2_value
+        self.hidden_layer_units = hidden_layer_units
+
 
     def Scaler(self):
         # Split the data into training and test sets
@@ -113,20 +128,44 @@ class SequentialNeuralNetwork():
         return scaler
 
     def Model(self):
-        model = keras.Sequential([
-            keras.layers.Dense(32, activation=self.activation_function, input_shape=(self.X_train.shape[1],), kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate), 
-            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate),
-            keras.layers.Dense(128, activation=self.activation_function, kernel_initializer=self.kernel_initializer),
-            keras.layers.BatchNormalization(),
-            keras.layers.Dropout(self.dropout_rate),
-            keras.layers.Dense(1),
-        ])
+        # Vytvoříme instanci regularizátoru (stejná logika jako dříve)
+        regularizer = None
+        if self.l1_value > 0 or self.l2_value > 0:
+             regularizer = regularizers.L1L2(l1=self.l1_value, l2=self.l2_value)
 
-        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError(), metrics=['accuracy'])
+        sample_weights = np.ones(len(self.y_train)) # Výchozí váha 1 pro všechny
+        resonance_threshold = 1# Stejný práh
+        resonance_threshold_high = 1.1# Stejný práh
+        low_weight = 0.0001 # Váha pro body nad prahem
+        lowest_weights = 0.0000001
+
+        sample_weights[self.y_train >= resonance_threshold] = low_weight
+        sample_weights[self.y_train >= resonance_threshold_high] = lowest_weights
+
+        model = keras.Sequential()
+        for i, units in enumerate(self.hidden_layer_units):
+            # Přidáme Dense vrstvu
+            if i == 0: # První skrytá vrstva potřebuje input_shape
+                model.add(keras.layers.Dense(units=units, # Používáme počet neuronů z aktuální pozice v seznamu
+                                activation=self.activation_function,
+                                input_shape=(self.X_train.shape[1],), # Input shape jen u první vrstvy
+                                kernel_initializer=self.kernel_initializer,
+                                kernel_regularizer=regularizer))
+            else: # Ostatní skryté vrstvy
+                model.add(keras.layers.Dense(units=units, # Používáme počet neuronů z aktuální pozice v seznamu
+                                activation=self.activation_function,
+                                kernel_initializer=self.kernel_initializer,
+                                kernel_regularizer=regularizer))
+
+            model.add(keras.layers.BatchNormalization())
+
+            if self.dropout_rate > 0:
+                 model.add(keras.layers.Dropout(rate=self.dropout_rate))
+
+        model.add(keras.layers.Dense(units=1,activation="softplus")) # Volitelná regularizace i na výstupu
+
+
+        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError())           #,metrics=[keras.metrics.MeanAbsoluteError()]
         
         Learning_rate_scheduler = keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
@@ -145,7 +184,8 @@ class SequentialNeuralNetwork():
             self.X_train, self.y_train,
             epochs=self.epochs,
             validation_split=self.validation_split,
-            callbacks=[live_plot_callback,self.time_history, Learning_rate_scheduler]
+            callbacks=[live_plot_callback,self.time_history, Learning_rate_scheduler],
+            sample_weight=sample_weights
         )
 
         total_training_time = time.time() - start_time
@@ -162,9 +202,16 @@ class SequentialNeuralNetwork():
             raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
         # Evaluate the model on test data
-        loss = self.model.evaluate(self.X_test, self.y_test)
+        resonance_threshold = 1
+        non_resonant_indices = self.y_test <= resonance_threshold
+        X_test_filtered = self.X_test[non_resonant_indices]
+        y_test_filtered = self.y_test[non_resonant_indices]
+
+        loss = self.model.evaluate(X_test_filtered , y_test_filtered)
         self.loss = loss
         print(f"Test MSE: {loss}")
+
+
         return loss
 
     def Save(self):
@@ -228,6 +275,7 @@ class SequentialNeuralNetwork():
         model_info['total_training_time'] = sum(epoch_times)  # Total time of training
         model_info['dropout_rate'] = self.dropout_rate
         model_info['mse_loss'] = self.loss
+        model_info["regulaizers_values"] = [self.l1_value,self.l2_value]
 
         return model_info
     

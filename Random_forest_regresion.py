@@ -30,8 +30,14 @@ class RandomForestRegresion():
         # Start tracking time before fitting the model
         start_time = time.time()
 
+        resonance_threshold = 5
+        non_resonant_indices = self.y_train <= resonance_threshold
+        X_train_filtered = self.X_train[non_resonant_indices]
+        y_train_filtered = self.y_train[non_resonant_indices]
+
+
         model = RandomForestRegressor(n_estimators=self.estimators, random_state=42)
-        model.fit(self.X_train, self.y_train)
+        model.fit(X_train_filtered, y_train_filtered)
 
         # End tracking time after fitting the model
         end_time = time.time()
@@ -46,10 +52,15 @@ class RandomForestRegresion():
             raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
         # Predict on the test set
-        y_pred = self.model.predict(self.X_test)
+
+        resonance_threshold = 5
+        non_resonant_indices = self.y_test <= resonance_threshold
+        X_test_filtered = self.X_test[non_resonant_indices]
+        y_test_filtered = self.y_test[non_resonant_indices]
+        y_pred = self.model.predict(X_test_filtered)
 
         # Calculate Mean Squared Error (MSE)
-        mse = mean_squared_error(self.y_test, y_pred)
+        mse = mean_squared_error(y_test_filtered, y_pred)
         self.loss = mse
         # Print the evaluation result
         print(f"Test MSE: {mse:.4f}")
