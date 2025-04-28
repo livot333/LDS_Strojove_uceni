@@ -48,14 +48,14 @@ class LivePlotCallback(keras.callbacks.Callback):
         self.wait = 0  # Counter for patience
 
         # Set up live plot
-        plt.ion()
-        self.fig, self.ax = plt.subplots()
-        self.line1, = self.ax.plot([], [], label="Train MSE", color="blue")
-        self.line2, = self.ax.plot([], [], label="Validation MSE", color="red")
-        self.ax.set_xlabel("Epochs")
-        self.ax.set_ylabel("MSE Loss")
-        self.ax.legend()
-        self.ax.set_title("Training Progress")
+        # plt.ion()
+        # self.fig, self.ax = plt.subplots()
+        # self.line1, = self.ax.plot([], [], label="Train MSE", color="blue")
+        # self.line2, = self.ax.plot([], [], label="Validation MSE", color="red")
+        # self.ax.set_xlabel("Epochs")
+        # self.ax.set_ylabel("MSE Loss")
+        # self.ax.legend()
+        # self.ax.set_title("Training Progress")
 
     def on_epoch_end(self, epoch, logs=None):
         logs = logs or {}
@@ -67,14 +67,14 @@ class LivePlotCallback(keras.callbacks.Callback):
             self.val_losses.append(val_loss)
 
             # Update plot
-            self.line1.set_xdata(range(1, len(self.train_losses) + 1))
-            self.line1.set_ydata(self.train_losses)
-            self.line2.set_xdata(range(1, len(self.val_losses) + 1))
-            self.line2.set_ydata(self.val_losses)
-            self.ax.relim()
-            self.ax.autoscale_view()
-            plt.draw()
-            plt.pause(0.1)  # Pause for real-time updating
+            # self.line1.set_xdata(range(1, len(self.train_losses) + 1))
+            # self.line1.set_ydata(self.train_losses)
+            # self.line2.set_xdata(range(1, len(self.val_losses) + 1))
+            # self.line2.set_ydata(self.val_losses)
+            # self.ax.relim()
+            # self.ax.autoscale_view()
+            # # plt.draw()
+            # # plt.pause(0.1)  # Pause for real-time updating
 
             # Check for early stopping
             if val_loss < self.best_val_loss:
@@ -86,9 +86,9 @@ class LivePlotCallback(keras.callbacks.Callback):
                     print(f"\nEarly stopping at epoch {epoch + 1} (Validation MSE stopped improving)")
                     self.model.stop_training = True
 
-    def on_train_end(self, logs=None):
-        plt.ioff()
-        plt.close(self.fig)
+    # def on_train_end(self, logs=None):
+    #     plt.ioff()
+    #     plt.close(self.fig)
 
 
 
@@ -135,7 +135,7 @@ class SequentialNeuralNetwork():
 
         sample_weights = np.ones(len(self.y_train)) # Výchozí váha 1 pro všechny
         resonance_threshold = 1# Stejný práh
-        resonance_threshold_high = 12.5 # Stejný práh
+        resonance_threshold_high = 1.1# Stejný práh
         low_weight = 0.0001 # Váha pro body nad prahem
         lowest_weights = 0.0000001
 
@@ -165,7 +165,7 @@ class SequentialNeuralNetwork():
         model.add(keras.layers.Dense(units=1,activation="softplus")) # Volitelná regularizace i na výstupu
 
 
-        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError(),metrics=[keras.metrics.MeanAbsoluteError()])
+        model.compile(optimizer=self.optimizer, loss=keras.losses.MeanSquaredError())           #,metrics=[keras.metrics.MeanAbsoluteError()]
         
         Learning_rate_scheduler = keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
@@ -202,7 +202,7 @@ class SequentialNeuralNetwork():
             raise ValueError("Model has not been trained yet. Please call 'Model' method first.")
 
         # Evaluate the model on test data
-        resonance_threshold = 5
+        resonance_threshold = 1
         non_resonant_indices = self.y_test <= resonance_threshold
         X_test_filtered = self.X_test[non_resonant_indices]
         y_test_filtered = self.y_test[non_resonant_indices]
