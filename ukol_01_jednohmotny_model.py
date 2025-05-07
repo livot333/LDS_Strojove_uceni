@@ -26,15 +26,15 @@ tuhost_rozsah = [10, 1000]
 frekvence_rozsah = [0.1, 10]
 
 # vlastnosti neuronove site
-epochs = 100    # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
+epochs = 123   # pro RFR se jedna o hodnotu number of estimators tzn pocet decision trees v modelu
 validation_split = 0.2
 test_size = 0.2
-learning_patience = 5 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
+learning_patience = 10 #how many epochs we wait before stopping training if validation loss (MSE) does not improve.
                         #neni treba sledovat u RFR
 activation_function_list = "relu"
 kernel_initializer = "he_uniform"
 optimizer_list = "rmsprop"
-dropout_rate = 0.5 #drzet mezi 0.1 a 0.5
+dropout_rate = 0.1 #drzet mezi 0.1 a 0.5
 l1_value = 0.0001
 l2_value = 0.0001
 
@@ -57,10 +57,10 @@ l2_value = 0.0001
 #         all_architectures.append(list(combo_tuple))
 
 
-hidden_layer_units_list = [32,16]#[1024,1024,1024,1024,128]
+hidden_layer_units_list = [16,32]#[1024,1024,1024,1024,128]
 # vlastnosti learning rate scheduleru 
-learn_rate_sched_patience = 2         # mensi nez learning_patience
-learn_rate_sched_factor = 0.1          #idealne mezi 0.1 a 0.5
+learn_rate_sched_patience = 12      # mensi nez learning_patience
+learn_rate_sched_factor = 0.2         #idealne mezi 0.1 a 0.5
 
 
 # Generování náhodných dat
@@ -83,10 +83,10 @@ pomerny_utlum = 1 / np.sqrt(((1 - (ni**2))**2) + (2 * bp * ni)**2)
 # data pro odhad 
 #Vstupn9 data pro odhad z modelu
 data_pro_odhad = [2.5 # hmotnost
-                  , 3 # tlumeni
-                  , 100 #tuhost
-                  , 15.0 # frekvence
-                  ]
+                , 3 # tlumeni
+                , 100 #tuhost
+                , 15.0 # frekvence
+                ]
 
 omega0_pred =  np.sqrt(data_pro_odhad[2]/data_pro_odhad[0])
 bkr_pred = 2*np.sqrt(data_pro_odhad[2]*data_pro_odhad[0])
@@ -114,24 +114,25 @@ data = pd.DataFrame({
 X = data[["hmotnost", "tlumeni", "tuhost", "frekvence","vlastni_frekvence","vlastni_frekvence1","bkr","bp","ni"]].values
 y = data["pomerny_utlum"].values
 
+
 # for hidden_layer_units_list in all_architectures:
-Model =  RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)#SequentialNeuralNetwork(
-# x=X,
-# y=y,
-# epochs=epochs,
-# validation_split=validation_split,
-# test_size=test_size,
-# patience=learning_patience,
-# learn_rate_sched_factor=learn_rate_sched_factor, 
-# learn_rate_sched_patience=learn_rate_sched_patience,
-# activation_function= activation_function_list,
-# kernel_initializer=kernel_initializer,
-# optimizer=optimizer_list,
-# dropout_rate=dropout_rate, 
-# l1_value=l1_value,
-# l2_value=l2_value,
-# hidden_layer_units=hidden_layer_units_list
-# )  
+Model = SequentialNeuralNetwork(
+x=X,
+y=y,
+epochs=epochs,
+validation_split=validation_split,
+test_size=test_size,
+patience=learning_patience,
+learn_rate_sched_factor=learn_rate_sched_factor, 
+learn_rate_sched_patience=learn_rate_sched_patience,
+activation_function= activation_function_list,
+kernel_initializer=kernel_initializer,
+optimizer=optimizer_list,
+dropout_rate=dropout_rate, 
+l1_value=l1_value,
+l2_value=l2_value,
+hidden_layer_units=hidden_layer_units_list
+)  
 # RandomForestRegresion(x=X,y=y,estimators=epochs,test_size=test_size)     
         
 scaler = Model.Scaler()

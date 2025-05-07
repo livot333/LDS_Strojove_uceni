@@ -30,7 +30,7 @@ class RandomForestRegresion():
         # Start tracking time before fitting the model
         start_time = time.time()
 
-        resonance_threshold = 5
+        resonance_threshold = 10000
         non_resonant_indices = self.y_train <= resonance_threshold
         X_train_filtered = self.X_train[non_resonant_indices]
         y_train_filtered = self.y_train[non_resonant_indices]

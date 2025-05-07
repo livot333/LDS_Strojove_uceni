@@ -136,8 +136,8 @@ class SequentialNeuralNetwork():
         sample_weights = np.ones(len(self.y_train)) # Výchozí váha 1 pro všechny
         resonance_threshold = 1# Stejný práh
         resonance_threshold_high = 1.1# Stejný práh
-        low_weight = 0.0001 # Váha pro body nad prahem
-        lowest_weights = 0.0000001
+        low_weight = 0.00001 # Váha pro body nad prahem
+        lowest_weights = 0.000001
 
         sample_weights[self.y_train >= resonance_threshold] = low_weight
         sample_weights[self.y_train >= resonance_threshold_high] = lowest_weights
